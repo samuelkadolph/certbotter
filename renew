@@ -1,0 +1,18 @@
+#!/bin/bash
+
+AWS=${AWS:-/etc/letsencrypt/aws}
+DIR=${DIR:-/a/letsencrypt}
+IMG=${IMG:-certbot/dns-route53}
+NGINX=${NGINX:-nginx}
+NGINX_CONF=${NGINX_CONF:-/config/nginx/nginx.conf}
+
+[ -n "$HEALTHCHECK" ] && trap "curl -s -m 10 --retry 5 -o /dev/null '$HEALTHCHECK/fail'" ERR
+
+set -e
+
+[ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK/start"
+
+docker run --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" $IMG renew -nq
+docker exec "$NGINX" nginx -c $NGINX_CONF -s reload
+
+[ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK"

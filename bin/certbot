@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+
+AWS=${AWS:-/etc/letsencrypt/aws}
+DIR=${DIR:-/a/letsencrypt}
+IMG=${IMG:-certbot/dns-route53}
+
+exec docker run -it --rm -e AWS_CONFIG_FILE=$AWS -v $DIR:/etc/letsencrypt $IMG $@
