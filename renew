@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/sh
 
 AWS=${AWS:-/etc/letsencrypt/aws}
 DIR=${DIR:-/a/letsencrypt}
@@ -6,7 +6,10 @@ IMG=${IMG:-certbot/dns-route53}
 NGINX=${NGINX:-nginx}
 NGINX_CONF=${NGINX_CONF:-/config/nginx/nginx.conf}
 
-[ -n "$HEALTHCHECK" ] && trap "curl -s -m 10 --retry 5 -o /dev/null '$HEALTHCHECK/fail'" ERR
+err() {
+  [ $? -ne 0 ] && [ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK/fail"
+}
+trap err EXIT
 
 set -e
 
@@ -17,4 +20,4 @@ docker exec "$NGINX" nginx -c $NGINX_CONF -s reload
 
 [ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK"
 
-exit
+exit 0
