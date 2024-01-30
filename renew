@@ -16,3 +16,5 @@ docker run --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" $IMG renew 
 docker exec "$NGINX" nginx -c $NGINX_CONF -s reload
 
 [ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK"
+
+exit
