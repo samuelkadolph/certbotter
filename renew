@@ -1,24 +1,31 @@
 #!/bin/sh
 
+root=$([ -L "$0" ] && cd $(dirname $(readlink "$0")) || cd $(dirname "$0"); pwd -P)
+
 AWS=${AWS:-/etc/letsencrypt/aws}
+CURL=${CURL:-curl -s -m 10 --retry 5 -o /dev/null}
 DIR=${DIR:-/a/letsencrypt}
 DOCKER=${DOCKER:-docker}
+HOOKS=${HOOKS:-$root/hooks}
 IMG=${IMG:-certbot/dns-route53}
 NGINX=${NGINX:-nginx}
 NGINX_CONF=${NGINX_CONF:-/config/nginx/nginx.conf}
 
 err() {
-  [ $? -ne 0 ] && [ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK/fail"
+  [ $? -ne 0 ] && [ -n "$HEALTHCHECK" ] && $CURL "$HEALTHCHECK/fail"
+  exit 0
 }
 trap err EXIT
 
 set -e
 
-[ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK/start"
+[ -n "$HEALTHCHECK" ] && $CURL "$HEALTHCHECK/start"
 
 $DOCKER run --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" $IMG renew -nq
 $DOCKER exec "$NGINX" nginx -c $NGINX_CONF -s reload
 
-[ -n "$HEALTHCHECK" ] && curl -s -m 10 --retry 5 -o /dev/null "$HEALTHCHECK"
+find -L "$HOOKS" -type f \( -perm -u=x -o -perm -g=x -o -perm -o=x \) -print0 | sort -z | xargs -r0 -I{} /bin/sh -c 'exec "{}"'
+
+[ -n "$HEALTHCHECK" ] && $CURL "$HEALTHCHECK"
 
 exit 0
