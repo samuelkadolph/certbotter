@@ -1,0 +1,2 @@
+%M% 09 * * * root %DIR%/update-git
+%M% 04 * * %W% root HEALTHCHECK=%HC% %DIR%/renew

@@ -3,6 +3,8 @@
 AWS=${AWS:-/etc/letsencrypt/aws}
 DIR=${DIR:-/a/letsencrypt}
 DOCKER=${DOCKER:-docker}
-IMG=${IMG:-certbot/dns-route53}
+IMG=${IMG:-certbot/dns-route53:latest}
 
-exec $DOCKER run -it --rm -e AWS_CONFIG_FILE=$AWS -v $DIR:/etc/letsencrypt $IMG $@
+$DOCKER image pull "$IMG" >/dev/null
+
+exec $DOCKER run -it --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" "$IMG" $@

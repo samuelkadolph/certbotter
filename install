@@ -1,0 +1,34 @@
+#!/bin/sh
+
+rand_minute() {
+  jot -w '%02d' -r 1 0 59
+}
+
+if [ $(id -u) -ne 0 ]; then
+  echo "$0: must run as root" >&2
+  exit 1
+fi
+
+root=$([ -L "$0" ] && cd $(dirname $(readlink "$0")) || cd $(dirname "$0"); pwd -P)
+bin=$roo/bin
+conf=$root/conf
+
+hc_url=""
+weekday="TUES"
+
+while [ $# -ne 0 ]; do
+  case "$1" in
+    -h|--hc) hc_url="$2"; shift 2;;
+    -w|--weekday) weekday="$2"; shift 2;;
+    *) break;;
+  esac
+done
+
+[ -z "$hc_url" ] && echo "healthcheck url must be specified" >&2 && exit
+
+set -Eeux
+
+ln -fs "$bin/certbot" "/usr/local/bin/certbot"
+
+sed "s|%DIR%|$root|;s|%HC%|$hc_url|;s|%M%|$(rand_minute)|;s|%W%|$weekday|" "$conf/cron.template" >"$conf/cron"
+ln -fs "$conf/cron" "/etc/cron.d/certbotter"

@@ -3,11 +3,12 @@
 root=$([ -L "$0" ] && cd $(dirname $(readlink "$0")) || cd $(dirname "$0"); pwd -P)
 
 AWS=${AWS:-/etc/letsencrypt/aws}
-CURL=${CURL:-curl -s -m 10 --retry 5 -o /dev/null}
 DIR=${DIR:-/a/letsencrypt}
 DOCKER=${DOCKER:-docker}
+IMG=${IMG:-certbot/dns-route53:latest}
+
+CURL=${CURL:-curl -s -m 10 --retry 5 -o /dev/null}
 HOOKS=${HOOKS:-$root/hooks}
-IMG=${IMG:-certbot/dns-route53}
 NGINX=${NGINX:-nginx}
 NGINX_CONF=${NGINX_CONF:-/config/nginx/nginx.conf}
 
@@ -21,8 +22,9 @@ set -e
 
 [ -n "$HEALTHCHECK" ] && $CURL "$HEALTHCHECK/start"
 
-$DOCKER run --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" $IMG renew -nq
-$DOCKER exec "$NGINX" nginx -c $NGINX_CONF -s reload
+$DOCKER image pull "$IMG"
+$DOCKER run --rm -e "AWS_CONFIG_FILE=$AWS" -v "$DIR:/etc/letsencrypt" "$IMG" renew -nq
+$DOCKER exec "$NGINX" nginx -c "$NGINX_CONF" -s reload
 
 find -L "$HOOKS" -type f \( -perm -u=x -o -perm -g=x -o -perm -o=x \) -print0 | sort -z | xargs -r0 -I{} /bin/sh -c 'exec "{}"'
 
