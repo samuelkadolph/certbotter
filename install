@@ -6,7 +6,7 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 root=$([ -L "$0" ] && cd $(dirname $(readlink "$0")) || cd $(dirname "$0"); pwd -P)
-bin=$roo/bin
+bin=$root/bin
 conf=$root/conf
 
 hc_url=""
