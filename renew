@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env sh
+
+set -eu
 
 root=$([ -L "$0" ] && cd $(dirname $(readlink "$0")) || cd $(dirname "$0"); pwd -P)
 
@@ -17,8 +19,6 @@ err() {
   exit 0
 }
 trap err EXIT
-
-set -e
 
 [ -n "$HEALTHCHECK" ] && $CURL "$HEALTHCHECK/start"
 
