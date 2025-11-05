@@ -13,7 +13,7 @@ conf=$root/conf
 
 hc_url=""
 minute="00"
-weekday="TUES"
+weekday="TUE"
 
 while [ $# -ne 0 ]; do
   case "$1" in
@@ -25,6 +25,7 @@ while [ $# -ne 0 ]; do
 done
 
 [ -z "$hc_url" ] && echo "healthcheck url must be specified" >&2 && exit
+! echo "$weekday" | grep -qE "^([0-7]|SUN|MON|TUE|WED|THU|FRI|SAT)$" && echo "cron weekday is not valid" >&2 && exit
 
 set -x
 
